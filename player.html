@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Flash Player (Ruffle)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+  <style>
+    html, body { height: 100%; margin: 0; background: #f5f4f1; }
+    .wrap { height: 100%; display: grid; place-items: center; padding: 0; }
+    .stage { width: min(100vw, 1200px); aspect-ratio: 4 / 3; background: #000; }
+    .stage, object { display:block; width:100%; height:100%; }
+
+    .bar {
+      position: fixed; top: 0; left: 0; right: 0; padding: .5rem .75rem;
+      font: 14px/1.2 system-ui, sans-serif; background: #fff8; backdrop-filter: blur(6px);
+      z-index: 1000;
+    }
+
+    /* Instruction banner (doesn't block right-click on the canvas) */
+    .tip {
+      position: fixed; inset: 0 0 auto 0; display: grid; place-items: center;
+      padding-top: 60px;       /* leaves space for top bar */
+      pointer-events: none;    /* let right-click pass through */
+      z-index: 999;
+    }
+    .tip-content {
+      pointer-events: auto;    /* only the card/buttons are clickable */
+      max-width: 90vw;
+      font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: #111; background: #fff; border: 1px solid #ddd;
+      border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      padding: 12px 14px;
+    }
+    .tip-content strong { font-weight: 600; }
+    .tip-actions { margin-top: 8px; text-align: right; }
+    .tip button {
+      font: inherit; padding: 6px 10px; border-radius: 8px; border: 0; cursor: pointer;
+      background: #111; color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">Ruffle Emulator • <a href="index.html">Back to Menu</a></div>
+
+  <!-- Instruction banner -->
+  <div class="tip" id="tip">
+    <div class="tip-content" role="dialog" aria-live="polite">
+      <div><strong>To continue in fullscreen:</strong> right-click (or long-press) on the module and choose <em>Enter Fullscreen</em>.</div>
+      <div class="tip-actions"><button id="tipClose" type="button">Got it</button></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="stage">
+      <object id="swf" type="application/x-shockwave-flash">
+        <param name="wmode" value="window" />
+        <param name="bgcolor" value="#000" />
+        <param name="quality" value="high" />
+        <param name="menu" value="false" />
+        <param name="allowscriptaccess" value="always" />
+        <param name="flashvars" id="flashvars" value="" />
+      </object>
+    </div>
+  </div>
+
+  <script>
+    // Keep your working logic exactly the same
+    const params = new URLSearchParams(location.search);
+    const swfPath = params.get('file');
+    if (!swfPath) {
+      document.body.innerHTML = "<p style='padding:2rem;font:16px system-ui'>Missing ?file=path/to/file.swf</p>";
+    } else {
+      const obj = document.getElementById('swf');
+      obj.setAttribute('data', swfPath);
+
+      const extra = new URLSearchParams();
+      for (const [k, v] of params.entries()) if (k !== 'file') extra.append(k, v);
+      document.getElementById('flashvars').value = extra.toString();
+    }
+
+    // Dismiss banner (auto-hide after 8s as well)
+    const tip = document.getElementById('tip');
+    document.getElementById('tipClose').addEventListener('click', () => tip.style.display = 'none');
+    setTimeout(() => { if (tip) tip.style.display = 'none'; }, 8000);
+  </script>
+</body>
+</html>
